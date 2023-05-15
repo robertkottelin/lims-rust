@@ -30,6 +30,4 @@ Scheduling and Workflow Management:
 Quality Control and Assurance:
 - Recording quality control for a sample and test with the record_quality_control function.
 
-The application provides a main function that initializes the database, adds a sample and an analysis statically, and demonstrates the usage of the implemented functions.
-
 Overall, this LIMS application provides a foundation for managing laboratory-related data, such as samples, analyses, users, inventory, test scheduling, and quality control.
