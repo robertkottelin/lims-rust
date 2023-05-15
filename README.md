@@ -1,5 +1,3 @@
-# lims-rust
-
 Laboratory Information Management System (LIMS) implemented in Rust. It supports various features for managing samples, analyses, users, inventory items, scheduling tests, and recording quality control.
 
 Features:
