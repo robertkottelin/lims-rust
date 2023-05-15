@@ -1,4 +1,6 @@
 use rusqlite::{params, Connection, Result, Row};
+use log::{info, warn, error};
+use csv::Writer;
 
 struct Sample {
     id: i32,
@@ -9,8 +11,10 @@ struct Sample {
 struct Analysis {
     id: i32,
     sample_id: i32,
+    instrument_id: i32,  // new field
     result: String,
 }
+
 
 fn init_db() -> Result<Connection> {
     let conn = Connection::open("lims.db")?;
@@ -28,10 +32,22 @@ fn init_db() -> Result<Connection> {
         "CREATE TABLE IF NOT EXISTS analyses (
             id              INTEGER PRIMARY KEY,
             sample_id       INTEGER NOT NULL,
+            instrument_id   INTEGER NOT NULL,  // new field
             result          TEXT NOT NULL,
-            FOREIGN KEY(sample_id) REFERENCES samples(id)
+            FOREIGN KEY(sample_id) REFERENCES samples(id),
+            FOREIGN KEY(instrument_id) REFERENCES instruments(id)  // new constraint
         )",
         params![],
+    )?;
+
+    conn.execute(
+      "CREATE TABLE IF NOT EXISTS instruments (
+          id              INTEGER PRIMARY KEY,
+          name            TEXT NOT NULL,
+          model           TEXT NOT NULL,
+          location        TEXT NOT NULL
+      )",
+      params![],
     )?;
 
     Ok(conn)
@@ -48,8 +64,8 @@ fn add_sample(conn: &Connection, sample: &Sample) -> Result<()> {
 
 fn add_analysis(conn: &Connection, analysis: &Analysis) -> Result<()> {
     conn.execute(
-        "INSERT INTO analyses (id, sample_id, result) VALUES (?1, ?2, ?3)",
-        params![analysis.id, analysis.sample_id, analysis.result],
+        "INSERT INTO analyses (id, sample_id, instrument_id, result) VALUES (?1, ?2, ?3, ?4)",
+        params![analysis.id, analysis.sample_id, analysis.instrument_id, analysis.result],
     )?;
     Ok(())
 }
@@ -227,10 +243,41 @@ fn record_quality_control(conn: &Connection, qc: &QualityControl) -> Result<(), 
     Ok(())
 }
 
+struct Instrument {
+    id: i32,
+    name: String,
+    model: String,
+    location: String,
+}
+
+fn add_instrument(conn: &Connection, instrument: &Instrument) -> Result<()> {
+    conn.execute(
+        "INSERT INTO instruments (id, name, model, location) VALUES (?1, ?2, ?3, ?4)",
+        params![instrument.id, instrument.name, instrument.model, instrument.location],
+    )?;
+    Ok(())
+}
+
+fn export_samples(conn: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+    let samples = get_samples(conn, None)?;
+
+    let mut wtr = Writer::from_path("samples.csv")?;
+
+    for sample in samples {
+        wtr.serialize(sample)?;
+    }
+
+    wtr.flush()?;
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
+    env_logger::init();
+    info!("Starting up");
+  
     let conn = init_db()?;
 
-    // For simplicity, let's add a sample and an analysis statically
     let sample = Sample {
         id: 1,
         name: "Sample 1".to_string(),
