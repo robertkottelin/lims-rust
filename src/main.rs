@@ -1,4 +1,8 @@
+use actix_web::web::Json;
+use actix_web::{web, App, HttpResponse, HttpServer};
+use rusqlite::{params, Connection, Result};
 use rusqlite::{params, Connection, Result, Row};
+use serde::{Deserialize, Serialize};
 
 struct Sample {
     id: i32,
@@ -227,23 +231,77 @@ fn record_quality_control(conn: &Connection, qc: &QualityControl) -> Result<(), 
     Ok(())
 }
 
-fn main() -> Result<()> {
-    let conn = init_db()?;
+// Your existing structs and functions here...
 
-    // For simplicity, let's add a sample and an analysis statically
-    let sample = Sample {
-        id: 1,
-        name: "Sample 1".to_string(),
-        description: "First Sample".to_string(),
+// For every struct, define a request and response version, e.g.:
+
+#[derive(Serialize, Deserialize)]
+struct SampleRequest {
+    name: String,
+    description: String,
+}
+
+#[derive(Serialize)]
+struct SampleResponse {
+    id: i32,
+    name: String,
+    description: String,
+}
+
+// And so on for Analysis, User, InventoryItem, Test, Schedule, QualityControl...
+
+// Then, for each function that you want to expose as an HTTP endpoint, define a handler function:
+
+async fn add_sample_handler(
+    conn: web::Data<Connection>,
+    item: web::Json<SampleRequest>,
+) -> HttpResponse {
+    let new_sample = Sample {
+        id: 0, // Replace with proper id generation
+        name: item.name.clone(),
+        description: item.description.clone(),
     };
-    add_sample(&conn, &sample)?;
+    match add_sample(&conn, &new_sample) {
+        Ok(_) => HttpResponse::Created().json(SampleResponse {
+            id: new_sample.id,
+            name: new_sample.name,
+            description: new_sample.description,
+        }),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
 
-    let analysis = Analysis {
-        id: 1,
-        sample_id: 1,
-        result: "Positive".to_string(),
-    };
-    add_analysis(&conn, &analysis)?;
+async fn get_samples_handler(conn: web::Data<Connection>) -> HttpResponse {
+    match get_samples(&conn, None) {
+        Ok(samples) => HttpResponse::Ok().json(
+            samples
+                .into_iter()
+                .map(|sample| SampleResponse {
+                    id: sample.id,
+                    name: sample.name,
+                    description: sample.description,
+                })
+                .collect::<Vec<SampleResponse>>(),
+        ),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
 
-    Ok(())
+// Similarly for add_analysis, update_sample_description, delete_sample, and so on...
+
+// Create server
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    let conn = init_db().unwrap();
+
+    HttpServer::new(move || {
+        App::new().data(conn.clone()).service(
+            web::resource("/samples")
+                .route(web::get().to(get_samples_handler))
+                .route(web::post().to(add_sample_handler)),
+        )
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
