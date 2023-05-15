@@ -1,4 +1,4 @@
-use rusqlite::{params, Connection, Result};
+use rusqlite::{params, Connection, Result, Row};
 
 struct Sample {
     id: i32,
@@ -37,6 +37,7 @@ fn init_db() -> Result<Connection> {
     Ok(conn)
 }
 
+// Basic CRUD for samples
 fn add_sample(conn: &Connection, sample: &Sample) -> Result<()> {
     conn.execute(
         "INSERT INTO samples (id, name, description) VALUES (?1, ?2, ?3)",
@@ -51,40 +52,6 @@ fn add_analysis(conn: &Connection, analysis: &Analysis) -> Result<()> {
         params![analysis.id, analysis.sample_id, analysis.result],
     )?;
     Ok(())
-}
-
-fn query_samples(
-    conn: &Connection,
-    sample_id: Option<i32>,
-) -> Result<Vec<Sample>, rusqlite::Error> {
-    let mut stmt = match sample_id {
-        Some(id) => conn.prepare("SELECT id, name, description FROM samples WHERE id = ?")?,
-        None => conn.prepare("SELECT id, name, description FROM samples")?,
-    };
-
-    let rows = match sample_id {
-        Some(id) => stmt.query_map(params![id], |row| {
-            Ok(Sample {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                description: row.get(2)?,
-            })
-        })?,
-        None => stmt.query_map([], |row| {
-            Ok(Sample {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                description: row.get(2)?,
-            })
-        })?,
-    };
-
-    let mut samples = Vec::new();
-    for sample in rows {
-        samples.push(sample?);
-    }
-
-    Ok(samples)
 }
 
 fn update_sample_description(
@@ -102,7 +69,33 @@ fn delete_sample(conn: &Connection, sample_id: i32) -> Result<usize, rusqlite::E
     conn.execute("DELETE FROM samples WHERE id = ?1", params![sample_id])
 }
 
-fn add_samples(conn: &Connection, samples: &Vec<Sample>) -> Result<(), rusqlite::Error> {
+// Querying and Reporting
+fn get_samples(conn: &Connection, sample_id: Option<i32>) -> Result<Vec<Sample>, rusqlite::Error> {
+    let mut stmt =
+        conn.prepare("SELECT id, name, description FROM samples WHERE (?1 IS NULL OR id = ?1)")?;
+
+    let map_row = |row: &Row| {
+        Ok(Sample {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            description: row.get(2)?,
+        })
+    };
+
+    let rows = match sample_id {
+        Some(id) => stmt.query_map(params![id], map_row)?,
+        None => stmt.query_map([], map_row)?,
+    };
+
+    let mut samples = Vec::new();
+    for row in rows {
+        samples.push(row?);
+    }
+    Ok(samples)
+}
+
+// Batch Operations
+fn add_samples(conn: &mut Connection, samples: &Vec<Sample>) -> Result<(), rusqlite::Error> {
     let tx = conn.transaction()?;
 
     for sample in samples {
@@ -112,9 +105,11 @@ fn add_samples(conn: &Connection, samples: &Vec<Sample>) -> Result<(), rusqlite:
         )?;
     }
 
-    tx.commit()
+    tx.commit()?;
+    Ok(())
 }
 
+// User management
 struct User {
     id: i32,
     username: String,
@@ -146,6 +141,7 @@ fn delete_user(conn: &Connection, user_id: i32) -> Result<usize, rusqlite::Error
     conn.execute("DELETE FROM users WHERE id = ?1", params![user_id])
 }
 
+// Inventory Management
 struct InventoryItem {
     id: i32,
     name: String,
@@ -176,6 +172,7 @@ fn delete_inventory_item(conn: &Connection, item_id: i32) -> Result<usize, rusql
     conn.execute("DELETE FROM inventory WHERE id = ?1", params![item_id])
 }
 
+// Scheduling and Workflow Management
 struct Test {
     id: i32,
     name: String,
@@ -212,6 +209,7 @@ fn schedule_test(conn: &Connection, schedule: &Schedule) -> Result<(), rusqlite:
     Ok(())
 }
 
+// Quality Control and Assurance
 struct QualityControl {
     id: i32,
     sample_id: i32,
