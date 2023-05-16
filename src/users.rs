@@ -24,3 +24,4 @@ pub fn update_user_role(
 pub fn delete_user(conn: &Connection, user_id: i32) -> Result<usize, rusqlite::Error> {
     conn.execute("DELETE FROM users WHERE id = ?1", params![user_id])
 }
+
