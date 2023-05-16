@@ -1,6 +1,6 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Sample {
     pub id: i32,
     pub name: String,
