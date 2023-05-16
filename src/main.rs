@@ -1,4 +1,7 @@
 #![allow(dead_code)]
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(warnings)]
 
 mod analysis;
 mod db;
@@ -33,8 +36,8 @@ fn main() -> Result<()> {
         name: "Sample 1".to_string(),
         description: "Test Sample".to_string(),
     };
-    // add_sample(&conn, &sample)?;
-    delete_sample(&conn, 1);
+    add_sample(&conn, &sample)?;
+    //delete_sample(&conn, 1);
 
     let analysis = Analysis {
         id: 2,
@@ -42,8 +45,8 @@ fn main() -> Result<()> {
         result: "Positive".to_string(),
         instrument_id: 1,
     };
-    // add_analysis(&conn, &analysis)?;
-    delete_analysis(&conn, 1)?;
+    add_analysis(&conn, &analysis)?;
+    // delete_analysis(&conn, 1)?;
 
     let instrument = Instrument {
         id: 2,
@@ -51,8 +54,8 @@ fn main() -> Result<()> {
         model: "Microscope".to_string(),
         location: "Microscope".to_string(),
     };
-    // add_instrument(&conn, &instrument)?;
-    delete_instruments(&conn, 1)?;
+    add_instrument(&conn, &instrument)?;
+    // delete_instruments(&conn, 1)?;
     log::info!("Shutting down");
     Ok(())
 }
