@@ -1,57 +1,9 @@
-use rusqlite::{params, Connection, Result, Row};
-use log::{info, warn, error};
+#![allow(dead_code)]
 use csv::Writer;
+use log::info;
+use rusqlite::{params, Connection, Result, Row};
+use serde::Serialize;
 
-struct Sample {
-    id: i32,
-    name: String,
-    description: String,
-}
-
-struct Analysis {
-    id: i32,
-    sample_id: i32,
-    instrument_id: i32,  // new field
-    result: String,
-}
-
-
-fn init_db() -> Result<Connection> {
-    let conn = Connection::open("lims.db")?;
-
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS samples (
-            id              INTEGER PRIMARY KEY,
-            name            TEXT NOT NULL,
-            description     TEXT NOT NULL
-        )",
-        params![],
-    )?;
-
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS analyses (
-            id              INTEGER PRIMARY KEY,
-            sample_id       INTEGER NOT NULL,
-            instrument_id   INTEGER NOT NULL,  // new field
-            result          TEXT NOT NULL,
-            FOREIGN KEY(sample_id) REFERENCES samples(id),
-            FOREIGN KEY(instrument_id) REFERENCES instruments(id)  // new constraint
-        )",
-        params![],
-    )?;
-
-    conn.execute(
-      "CREATE TABLE IF NOT EXISTS instruments (
-          id              INTEGER PRIMARY KEY,
-          name            TEXT NOT NULL,
-          model           TEXT NOT NULL,
-          location        TEXT NOT NULL
-      )",
-      params![],
-    )?;
-
-    Ok(conn)
-}
 
 // Basic CRUD for samples
 fn add_sample(conn: &Connection, sample: &Sample) -> Result<()> {
@@ -65,7 +17,12 @@ fn add_sample(conn: &Connection, sample: &Sample) -> Result<()> {
 fn add_analysis(conn: &Connection, analysis: &Analysis) -> Result<()> {
     conn.execute(
         "INSERT INTO analyses (id, sample_id, instrument_id, result) VALUES (?1, ?2, ?3, ?4)",
-        params![analysis.id, analysis.sample_id, analysis.instrument_id, analysis.result],
+        params![
+            analysis.id,
+            analysis.sample_id,
+            analysis.instrument_id,
+            analysis.result
+        ],
     )?;
     Ok(())
 }
@@ -83,6 +40,10 @@ fn update_sample_description(
 
 fn delete_sample(conn: &Connection, sample_id: i32) -> Result<usize, rusqlite::Error> {
     conn.execute("DELETE FROM samples WHERE id = ?1", params![sample_id])
+}
+
+fn delete_analysis(conn: &Connection, analysis_id: i32) -> Result<usize, rusqlite::Error> {
+    conn.execute("DELETE FROM analyses WHERE id = ?1", params![analysis_id])
 }
 
 // Querying and Reporting
@@ -125,13 +86,7 @@ fn add_samples(conn: &mut Connection, samples: &Vec<Sample>) -> Result<(), rusql
     Ok(())
 }
 
-// User management
-struct User {
-    id: i32,
-    username: String,
-    password: String, // TODO: hash and .env
-    role: String,
-}
+// User 
 
 fn add_user(conn: &Connection, user: &User) -> Result<(), rusqlite::Error> {
     conn.execute(
@@ -157,12 +112,10 @@ fn delete_user(conn: &Connection, user_id: i32) -> Result<usize, rusqlite::Error
     conn.execute("DELETE FROM users WHERE id = ?1", params![user_id])
 }
 
-// Inventory Management
-struct InventoryItem {
-    id: i32,
-    name: String,
-    quantity: i32,
+fn delete_instrument(conn: &Connection, instrument_id: i32) -> Result<usize, rusqlite::Error> {
+    conn.execute("DELETE FROM instruments WHERE id = ?1", params![instrument_id])
 }
+
 
 fn add_inventory_item(conn: &Connection, item: &InventoryItem) -> Result<(), rusqlite::Error> {
     conn.execute(
@@ -188,19 +141,6 @@ fn delete_inventory_item(conn: &Connection, item_id: i32) -> Result<usize, rusql
     conn.execute("DELETE FROM inventory WHERE id = ?1", params![item_id])
 }
 
-// Scheduling and Workflow Management
-struct Test {
-    id: i32,
-    name: String,
-    description: String,
-}
-
-struct Schedule {
-    id: i32,
-    sample_id: i32,
-    test_id: i32,
-    scheduled_time: String, // Note: you'd likely want to use a DateTime type in a real application
-}
 
 fn add_test(conn: &Connection, test: &Test) -> Result<(), rusqlite::Error> {
     conn.execute(
@@ -225,14 +165,6 @@ fn schedule_test(conn: &Connection, schedule: &Schedule) -> Result<(), rusqlite:
     Ok(())
 }
 
-// Quality Control and Assurance
-struct QualityControl {
-    id: i32,
-    sample_id: i32,
-    test_id: i32,
-    expected_result: String,
-    actual_result: String,
-}
 
 fn record_quality_control(conn: &Connection, qc: &QualityControl) -> Result<(), rusqlite::Error> {
     conn.execute(
@@ -243,17 +175,16 @@ fn record_quality_control(conn: &Connection, qc: &QualityControl) -> Result<(), 
     Ok(())
 }
 
-struct Instrument {
-    id: i32,
-    name: String,
-    model: String,
-    location: String,
-}
 
 fn add_instrument(conn: &Connection, instrument: &Instrument) -> Result<()> {
     conn.execute(
         "INSERT INTO instruments (id, name, model, location) VALUES (?1, ?2, ?3, ?4)",
-        params![instrument.id, instrument.name, instrument.model, instrument.location],
+        params![
+            instrument.id,
+            instrument.name,
+            instrument.model,
+            instrument.location
+        ],
     )?;
     Ok(())
 }
@@ -273,24 +204,38 @@ fn export_samples(conn: &Connection) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() -> Result<()> {
+    std::env::set_var("RUST_LOG", "info");
     env_logger::init();
     info!("Starting up");
-  
+
     let conn = init_db()?;
 
     let sample = Sample {
-        id: 1,
+        id: 2,
         name: "Sample 1".to_string(),
-        description: "First Sample".to_string(),
+        description: "Test Sample".to_string(),
     };
-    add_sample(&conn, &sample)?;
+    // add_sample(&conn, &sample)?;
+    delete_sample(&conn, 1);
 
     let analysis = Analysis {
-        id: 1,
-        sample_id: 1,
+        id: 2,
+        sample_id: 0,
         result: "Positive".to_string(),
+        instrument_id: 1,
     };
-    add_analysis(&conn, &analysis)?;
+    // add_analysis(&conn, &analysis)?;
+    delete_analysis(&conn, 1)?;
 
+    let instrument = Instrument {
+        id: 2,
+        name: "Microscope".to_string(),
+        model: "Microscope".to_string(),
+        location: "Microscope".to_string(),
+    };
+    // add_instrument(&conn, &instrument)?;
+    delete_instrument(&conn, 1)?;
+
+    info!("Shutting down");
     Ok(())
 }
