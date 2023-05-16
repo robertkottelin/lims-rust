@@ -21,6 +21,24 @@ struct Analysis {
     result: String,
 }
 
+// New structs for representing instruments
+#[derive(Serialize, Deserialize)]
+struct Instrument {
+    id: i32,
+    name: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct InstrumentRequest {
+    name: String,
+}
+
+#[derive(Serialize)]
+struct InstrumentResponse {
+    id: i32,
+    name: String,
+}
+
 #[derive(Serialize, Deserialize)]
 struct AnalysisRequest {
     sample_id: i32,
@@ -354,6 +372,60 @@ async fn record_quality_control_handler(
     }
 }
 
+async fn add_instrument_handler(
+    conn: web::Data<Connection>,
+    item: web::Json<InstrumentRequest>,
+) -> HttpResponse {
+    let new_instrument = Instrument {
+        id: 0, // Replace with proper id generation
+        name: item.name.clone(),
+        description: item.description.clone(),
+    };
+    match add_instrument(&conn, &new_instrument) {
+        Ok(_) => HttpResponse::Created().json(InstrumentResponse {
+            id: new_instrument.id,
+            name: new_instrument.name,
+            description: new_instrument.description,
+        }),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
+
+async fn get_instruments_handler(conn: web::Data<Connection>) -> HttpResponse {
+    match get_instruments(&conn, None) {
+        Ok(instruments) => HttpResponse::Ok().json(
+            instruments
+                .into_iter()
+                .map(|instrument| InstrumentResponse {
+                    id: instrument.id,
+                    name: instrument.name,
+                    description: instrument.description,
+                })
+                .collect::<Vec<InstrumentResponse>>(),
+        ),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
+
+async fn update_instrument_handler(
+    conn: web::Data<Connection>,
+    item: web::Path<(i32, String)>,
+) -> HttpResponse {
+    match update_instrument_description(&conn, item.0, item.1.clone()) {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
+
+async fn delete_instrument_handler(conn: web::Data<Connection>, item: web::Path<i32>) -> HttpResponse {
+    match delete_instrument(&conn, item.into_inner()) {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
+
+
+
 fn init_db() -> Result<Connection> {
     let conn = Connection::open("lims.db")?;
 
@@ -372,6 +444,14 @@ fn init_db() -> Result<Connection> {
             sample_id       INTEGER NOT NULL,
             result          TEXT NOT NULL,
             FOREIGN KEY(sample_id) REFERENCES samples(id)
+        )",
+        params![],
+    )?;
+    
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS instruments (
+            id              INTEGER PRIMARY KEY,
+            name            TEXT NOT NULL
         )",
         params![],
     )?;
@@ -417,6 +497,14 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::resource("/qualitycontrol")
                     .route(web::post().to(record_quality_control_handler)),
+            )
+            // Handlers for Instruments
+            .service(
+                web::resource("/instruments")
+                    .route(web::post().to(add_instrument_handler))
+                    .route(web::get().to(get_instruments_handler))
+                    .route(web::delete().to(delete_instrument_handler))
+                    .route(web::patch().to(update_instrument_handler)),
             )
     })
     .bind("127.0.0.1:8080")?
