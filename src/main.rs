@@ -17,6 +17,7 @@ mod users;
 use actix_web::{web, App, HttpServer, Responder};
 use env_logger;
 use rusqlite::Result;
+
 use db::init_db;
 use models::{Sample, Analysis, Instrument};
 use samples::*;
