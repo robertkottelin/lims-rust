@@ -1,33 +1,27 @@
-Laboratory Information Management System (LIMS) implemented in Rust. It supports various features for managing samples, analyses, users, inventory items, scheduling tests, and recording quality control. Frontend coming soon.
+Laboratory Information Management System (LIMS) written in Rusr with functionality to manage samples, analyses, instruments, and tests. The application includes several modules:
 
-Features:
+    mod analysis; - This module handles operations related to the analysis entities, such as creating and retrieving them.
 
-Basic CRUD for samples:
+    mod db; - This module is responsible for handling database connections and queries.
 
-- Adding a sample with the add_sample function.
-- Adding an analysis for a sample with the add_analysis function.
-- Updating the description of a sample with the update_sample_description function.
-- Deleting a sample with the delete_sample function.
-- Querying and reporting samples using the get_samples function.
+    mod export; - This module is used for exporting data, possibly in different formats.
 
-Batch Operations:
-- Adding multiple samples in a single transaction with the add_samples function.
+    mod instruments; - This module handles operations related to instrument entities, such as adding and retrieving them.
 
-User Management:
-- Adding a user with the add_user function.
-- Updating the role of a user with the update_user_role function.
-- Deleting a user with the delete_user function.
+    mod inventory; - This module handles inventory management.
 
-Inventory Management:
-- Adding an inventory item with the add_inventory_item function.
-- Updating the quantity of an inventory item with the update_inventory_item_quantity function.
-- Deleting an inventory item with the delete_inventory_item function.
+    mod models; - This module defines the data models used in the application. It includes structs for entities such as Sample, Analysis, and Instrument.
 
-Scheduling and Workflow Management:
-- Adding a test with the add_test function.
-- Scheduling a test for a sample with the schedule_test function.
+    mod qc; - This module handles quality control functions.
 
-Quality Control and Assurance:
-- Recording quality control for a sample and test with the record_quality_control function.
+    mod samples; - This module handles operations related to sample entities, such as adding and retrieving them.
 
-Overall, this LIMS application provides a foundation for managing laboratory-related data, such as samples, analyses, users, inventory, test scheduling, and quality control.
+    mod tests; - This module deals with operations related to tests, like adding and retrieving tests.
+
+    mod users; - This module is used for managing user data, possibly including authentication and user roles.
+
+The main function sets up logging, initializes the database, and starts an HTTP server. It defines routes for various operations such as getting a sample, adding a new sample, adding a new instrument, adding a new analysis, and adding a new test. Each route is associated with an asynchronous handler function that performs the required operation and responds to the HTTP request. The database connection is shared across all handler functions via Arc and Mutex, which allows safely sharing mutable state across multiple threads.
+
+The handler functions make use of functions defined in the different modules to perform CRUD (Create, Read, Update, Delete) operations on the respective entities. The data for new entities is expected to be received as JSON in the body of a POST request.
+
+Overall, this application demonstrates how Rust can be used to build a robust and efficient web application with a clear separation of concerns and strong type safety.
