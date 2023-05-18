@@ -3,13 +3,10 @@ use rusqlite::{params, Connection, Result};
 
 pub fn add_analysis(conn: &Connection, analysis: &Analysis) -> Result<()> {
     conn.execute(
-        "INSERT INTO analyses (id, sample_id, instrument_id, result) VALUES (?1, ?2, ?3, ?4)",
+        "INSERT INTO analyses (name, description) VALUES (?1, ?2)",
         params![
-            analysis.id,
-            analysis.sample_id,
-            analysis.instrument_id,
-            analysis.result
-        ],
+            analysis.name,
+            analysis.description        ],
     )?;
     Ok(())
 }

@@ -10,9 +10,8 @@ pub struct Sample {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Analysis {
     pub id: Option<i32>,
-    pub sample_id: i32,
-    pub instrument_id: i32, // new field
-    pub result: String,
+    pub name: String,
+    pub description: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -32,9 +31,11 @@ pub struct InventoryItem {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Test {
-    pub id: i32,
-    pub name: String,
-    pub description: String,
+    pub id: Option<i32>,
+    pub sample_id: i32,
+    pub analysis_id: i32,
+    pub instrument_id: i32,
+    pub result: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

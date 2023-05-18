@@ -21,7 +21,7 @@ use rusqlite::Result;
 use analysis::*;
 use db::init_db;
 use instruments::*;
-use models::{Analysis, Instrument, Sample};
+use models::{Analysis, Instrument, Sample, Test};
 use samples::*;
 use std::sync::{Arc, Mutex};
 
@@ -40,6 +40,7 @@ async fn main() -> std::io::Result<()> {
             .route("/samples", web::post().to(add_sample))
             .route("/add_instrument", web::post().to(add_instrument))
             .route("/add_analysis", web::post().to(add_analysis))
+            .route("/add_test", web::post().to(add_test))
     })
     .bind("127.0.0.1:8080")?
     .run()
@@ -84,5 +85,16 @@ async fn add_analysis(
     match result {
         Ok(()) => format!("Analysis created"),
         Err(e) => format!("Failed to create analysis: {}", e),
+    }
+}
+
+async fn add_test(
+    db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
+    new_test: web::Json<Test>,
+) -> impl Responder {
+    let result = tests::add_test(&*db.lock().unwrap(), &new_test.into_inner());
+    match result {
+        Ok(()) => format!("Test created"),
+        Err(e) => format!("Failed to create test: {}", e),
     }
 }

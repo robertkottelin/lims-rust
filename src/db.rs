@@ -15,11 +15,8 @@ pub fn init_db() -> Result<Connection> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS analyses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sample_id       INTEGER NOT NULL,
-            instrument_id   INTEGER NOT NULL,
-            result          TEXT NOT NULL,
-            FOREIGN KEY(sample_id) REFERENCES samples(id),
-            FOREIGN KEY(instrument_id) REFERENCES instruments(id)
+            name          TEXT NOT NULL,
+            description          TEXT NOT NULL
         )",
         params![],
     )?;
@@ -30,6 +27,20 @@ pub fn init_db() -> Result<Connection> {
             name            TEXT NOT NULL,
             model           TEXT NOT NULL,
             location        TEXT NOT NULL
+      )",
+        params![],
+    )?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS tests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sample_id       INTEGER,
+            analysis_id     INTEGER,
+            instrument_id   INTEGER,
+            result        TEXT NOT NULL,
+            FOREIGN KEY (sample_id) REFERENCES samples(id),
+            FOREIGN KEY (analysis_id) REFERENCES analyses(id),
+            FOREIGN KEY (instrument_id) REFERENCES instruments(id)
       )",
         params![],
     )?;

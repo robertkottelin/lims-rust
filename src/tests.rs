@@ -3,8 +3,8 @@ use rusqlite::{params, Connection, Result};
 
 pub fn add_test(conn: &Connection, test: &Test) -> Result<(), rusqlite::Error> {
     conn.execute(
-        "INSERT INTO tests (id, name, description) VALUES (?1, ?2, ?3)",
-        params![test.id, test.name, test.description],
+        "INSERT INTO tests (sample_id, analysis_id, instrument_id, result) VALUES (?1, ?2, ?3, ?4)",
+        params![test.sample_id, test.analysis_id, test.instrument_id, test.result],
     )?;
 
     Ok(())
