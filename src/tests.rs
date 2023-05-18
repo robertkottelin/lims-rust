@@ -1,5 +1,5 @@
+use crate::models::{Schedule, Test};
 use rusqlite::{params, Connection, Result};
-use crate::models::{Test, Schedule};
 
 pub fn add_test(conn: &Connection, test: &Test) -> Result<(), rusqlite::Error> {
     conn.execute(

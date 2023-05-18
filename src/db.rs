@@ -14,7 +14,7 @@ pub fn init_db() -> Result<Connection> {
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS analyses (
-            id              INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             sample_id       INTEGER NOT NULL,
             instrument_id   INTEGER NOT NULL,
             result          TEXT NOT NULL,
@@ -26,12 +26,13 @@ pub fn init_db() -> Result<Connection> {
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS instruments (
-          id              INTEGER PRIMARY KEY,
-          name            TEXT NOT NULL,
-          model           TEXT NOT NULL,
-          location        TEXT NOT NULL
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name            TEXT NOT NULL,
+            model           TEXT NOT NULL,
+            location        TEXT NOT NULL
       )",
         params![],
     )?;
 
-    Ok(conn)}
+    Ok(conn)
+}

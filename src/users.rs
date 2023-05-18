@@ -1,5 +1,5 @@
-use rusqlite::{params, Connection, Result};
 use crate::models::User;
+use rusqlite::{params, Connection, Result};
 
 pub fn add_user(conn: &Connection, user: &User) -> Result<(), rusqlite::Error> {
     conn.execute(
@@ -24,4 +24,3 @@ pub fn update_user_role(
 pub fn delete_user(conn: &Connection, user_id: i32) -> Result<usize, rusqlite::Error> {
     conn.execute("DELETE FROM users WHERE id = ?1", params![user_id])
 }
-

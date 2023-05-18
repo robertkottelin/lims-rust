@@ -1,6 +1,5 @@
-
-use rusqlite::{params, Connection, Result, Row};
 use crate::models::Sample;
+use rusqlite::{params, Connection, Result, Row};
 
 // Basic CRUD for samples
 pub fn add_sample(conn: &Connection, sample: &Sample) -> Result<()> {
@@ -27,7 +26,10 @@ pub fn delete_sample(conn: &Connection, sample_id: i32) -> Result<usize, rusqlit
 }
 
 // Querying and Reporting
-pub fn get_samples(conn: &Connection, sample_id: Option<i32>) -> Result<Vec<Sample>, rusqlite::Error> {
+pub fn get_samples(
+    conn: &Connection,
+    sample_id: Option<i32>,
+) -> Result<Vec<Sample>, rusqlite::Error> {
     let mut stmt =
         conn.prepare("SELECT id, name, description FROM samples WHERE (?1 IS NULL OR id = ?1)")?;
 

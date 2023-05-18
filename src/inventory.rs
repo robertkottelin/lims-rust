@@ -1,5 +1,5 @@
-use rusqlite::{params, Connection, Result};
 use crate::models::InventoryItem;
+use rusqlite::{params, Connection, Result};
 
 pub fn add_inventory_item(conn: &Connection, item: &InventoryItem) -> Result<(), rusqlite::Error> {
     conn.execute(

@@ -1,5 +1,5 @@
-use rusqlite::{params, Connection, Result};
 use crate::models::Analysis;
+use rusqlite::{params, Connection, Result};
 
 pub fn add_analysis(conn: &Connection, analysis: &Analysis) -> Result<()> {
     conn.execute(

@@ -1,19 +1,21 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Sample {
-    pub id: Option<i32>, 
+    pub id: Option<i32>,
     pub name: String,
     pub description: String,
 }
-    
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Analysis {
-    pub id: i32,
+    pub id: Option<i32>,
     pub sample_id: i32,
     pub instrument_id: i32, // new field
     pub result: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -21,25 +23,29 @@ pub struct User {
     pub role: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct InventoryItem {
     pub id: i32,
     pub name: String,
     pub quantity: i32,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Test {
     pub id: i32,
     pub name: String,
     pub description: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Schedule {
     pub id: i32,
     pub sample_id: i32,
     pub test_id: i32,
-    pub scheduled_time: String, // Note: you'd likely want to use a DateTime type in a real application
+    pub scheduled_time: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct QualityControl {
     pub id: i32,
     pub sample_id: i32,
@@ -48,8 +54,9 @@ pub struct QualityControl {
     pub actual_result: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Instrument {
-    pub id: i32,
+    pub id: Option<i32>,
     pub name: String,
     pub model: String,
     pub location: String,
