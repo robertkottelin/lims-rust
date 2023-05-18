@@ -5,8 +5,8 @@ use crate::models::Sample;
 // Basic CRUD for samples
 pub fn add_sample(conn: &Connection, sample: &Sample) -> Result<()> {
     conn.execute(
-        "INSERT INTO samples (id, name, description) VALUES (?1, ?2, ?3)",
-        params![sample.id, sample.name, sample.description],
+        "INSERT INTO samples (name, description) VALUES (?1, ?2)",
+        params![sample.name, sample.description],
     )?;
     Ok(())
 }

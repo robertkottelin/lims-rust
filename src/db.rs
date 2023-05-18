@@ -5,10 +5,10 @@ pub fn init_db() -> Result<Connection> {
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS samples (
-            id              INTEGER PRIMARY KEY,
-            name            TEXT NOT NULL,
-            description     TEXT NOT NULL
-        )",
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL
+        );",
         params![],
     )?;
 
