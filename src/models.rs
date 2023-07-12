@@ -32,9 +32,9 @@ pub struct InventoryItem {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Test {
     pub id: Option<i32>,
-    pub sample_id: i32,
-    pub analysis_id: i32,
-    pub instrument_id: i32,
+    pub sample_name: String,
+    pub analysis_name: String,
+    pub instrument_name: String,
     pub result: String,
 }
 

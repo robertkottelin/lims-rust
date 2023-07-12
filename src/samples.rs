@@ -26,7 +26,7 @@ pub fn delete_sample(conn: &Connection, sample_id: i32) -> Result<usize, rusqlit
 }
 
 // Querying and Reporting
-pub fn get_samples(
+pub fn get_sample_id(
     conn: &Connection,
     sample_id: Option<i32>,
 ) -> Result<Vec<Sample>, rusqlite::Error> {
@@ -50,6 +50,24 @@ pub fn get_samples(
     for row in rows {
         samples.push(row?);
     }
+    Ok(samples)
+}
+
+pub fn get_all_samples(conn: &Connection) -> Result<Vec<Sample>, rusqlite::Error> {
+    let mut stmt = conn.prepare("SELECT * FROM samples")?;
+    let sample_iter = stmt.query_map(params![], |row| {
+        Ok(Sample {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            description: row.get(2)?,
+        })
+    })?;
+
+    let mut samples = Vec::new();
+    for sample in sample_iter {
+        samples.push(sample?);
+    }
+
     Ok(samples)
 }
 

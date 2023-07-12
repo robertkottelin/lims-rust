@@ -17,6 +17,9 @@ mod users;
 use actix_web::{web, App, HttpServer, Responder};
 use env_logger;
 use rusqlite::Result;
+use actix_web::HttpResponse;
+use actix_web::http::StatusCode;
+use serde_json::to_string;
 
 use analysis::*;
 use db::init_db;
@@ -36,23 +39,37 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(conn.clone())
-            .route("/samples/{id}", web::get().to(get_samples))
-            .route("/samples", web::post().to(add_sample))
+            .route("/sample_id/{id}", web::get().to(get_sample_id))
+            .route("/add_sample", web::post().to(add_sample))
+            .route("/samples", web::get().to(get_all_samples))
             .route("/add_instrument", web::post().to(add_instrument))
+            .route("/instruments", web::get().to(get_all_instruments))
             .route("/add_analysis", web::post().to(add_analysis))
+            .route("/analyses", web::get().to(get_all_analyses))     
             .route("/add_test", web::post().to(add_test))
+            .route("/tests", web::get().to(get_all_tests))
     })
     .bind("127.0.0.1:8080")?
     .run()
     .await
 }
 
-async fn get_samples(
+async fn get_sample_id(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
     id: web::Path<i32>,
 ) -> impl Responder {
-    let samples = samples::get_samples(&*db.lock().unwrap(), Some(*id));
+    let samples = samples::get_sample_id(&*db.lock().unwrap(), Some(*id));
     format!("Sample: {:?}", samples)
+}
+
+async fn get_all_samples(
+    db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
+) -> HttpResponse {
+    let samples = samples::get_all_samples(&*db.lock().unwrap());
+    match samples {
+        Ok(samples) => HttpResponse::Ok().json(samples),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get samples: {}", e)),
+    }
 }
 
 async fn add_sample(
@@ -77,6 +94,16 @@ async fn add_instrument(
     }
 }
 
+async fn get_all_instruments(
+    db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
+) -> HttpResponse {
+    let instruments = instruments::get_all_instruments(&*db.lock().unwrap());
+    match instruments {
+        Ok(instruments) => HttpResponse::Ok().json(instruments),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get instruments: {}", e)),
+    }
+}
+
 async fn add_analysis(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
     new_analysis: web::Json<Analysis>,
@@ -88,6 +115,16 @@ async fn add_analysis(
     }
 }
 
+async fn get_all_analyses(
+    db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
+) -> HttpResponse {
+    let analyses = analysis::get_all_analyses(&*db.lock().unwrap());
+    match analyses {
+        Ok(analyses) => HttpResponse::Ok().json(analyses),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get analyses: {}", e)),
+    }
+}
+
 async fn add_test(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
     new_test: web::Json<Test>,
@@ -96,5 +133,15 @@ async fn add_test(
     match result {
         Ok(()) => format!("Test created"),
         Err(e) => format!("Failed to create test: {}", e),
+    }
+}
+
+async fn get_all_tests(
+    db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
+) -> HttpResponse {
+    let tests = tests::get_all_tests(&*db.lock().unwrap());
+    match tests {
+        Ok(tests) => HttpResponse::Ok().json(tests),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get tests: {}", e)),
     }
 }

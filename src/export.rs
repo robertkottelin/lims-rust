@@ -1,10 +1,10 @@
 use csv::Writer;
 use rusqlite::{params, Connection, Result};
 
-use crate::samples::get_samples;
+use crate::samples::get_sample_id;
 
 pub fn export_samples(conn: &Connection) -> Result<(), Box<dyn std::error::Error>> {
-    let samples = get_samples(conn, None)?;
+    let samples = get_sample_id(conn, None)?;
 
     let mut wtr = Writer::from_path("samples.csv")?;
 
