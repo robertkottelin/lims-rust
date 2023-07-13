@@ -1,7 +1,36 @@
-use crate::models::{Schedule, Test};
+use crate::models::{Schedule, Test, TestInput};
 use rusqlite::{params, Connection, Result};
 
-pub fn add_test(conn: &Connection, test: &Test) -> Result<(), rusqlite::Error> {
+pub fn add_test(conn: &Connection, test_input: &TestInput) -> Result<(), rusqlite::Error> {
+    let sample_id: i32 = conn.query_row(
+        "SELECT id FROM samples WHERE name = ?1",
+        params![test_input.sample_name],
+        |row| row.get(0),
+    )?;
+
+    let analysis_id: i32 = conn.query_row(
+        "SELECT id FROM analyses WHERE name = ?1",
+        params![test_input.analysis_name],
+        |row| row.get(0),
+    )?;
+
+    let instrument_id: i32 = conn.query_row(
+        "SELECT id FROM instruments WHERE name = ?1",
+        params![test_input.instrument_name],
+        |row| row.get(0),
+    )?;
+
+    let test = Test {
+        id: None,
+        sample_id,
+        sample_name: test_input.sample_name.clone(),
+        analysis_id,
+        analysis_name: test_input.analysis_name.clone(),
+        instrument_id,
+        instrument_name: test_input.instrument_name.clone(),
+        result: test_input.result.clone(),
+    };
+
     conn.execute(
         "INSERT INTO tests (sample_id, sample_name, analysis_id, analysis_name, instrument_id, instrument_name, result) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         params![test.sample_id, test.sample_name, test.analysis_id, test.analysis_name, test.instrument_id, test.instrument_name, test.result],

@@ -24,7 +24,7 @@ use serde_json::to_string;
 use analysis::*;
 use db::init_db;
 use instruments::*;
-use models::{Analysis, Instrument, Sample, Test};
+use models::{Analysis, Instrument, Sample, Test, TestInput};
 use samples::*;
 use std::sync::{Arc, Mutex};
 
@@ -78,8 +78,8 @@ async fn add_sample(
 ) -> impl Responder {
     let result = samples::add_sample(&*db.lock().unwrap(), &new_sample.into_inner());
     match result {
-        Ok(()) => format!("Sample created"),
-        Err(e) => format!("Failed to create sample: {}", e),
+        Ok(()) => HttpResponse::Ok().json(serde_json::json!({"message": "Sample created"})),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to create sample: {}", e)),
     }
 }
 
@@ -89,8 +89,8 @@ async fn add_instrument(
 ) -> impl Responder {
     let result = instruments::add_instrument(&*db.lock().unwrap(), &new_instrument.into_inner());
     match result {
-        Ok(()) => format!("Instrument created"),
-        Err(e) => format!("Failed to create instrument: {}", e),
+        Ok(()) => HttpResponse::Ok().json(serde_json::json!({"message": "Instrument created"})),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to create instrument: {}", e)),
     }
 }
 
@@ -110,8 +110,8 @@ async fn add_analysis(
 ) -> impl Responder {
     let result = analysis::add_analysis(&*db.lock().unwrap(), &new_analysis.into_inner());
     match result {
-        Ok(()) => format!("Analysis created"),
-        Err(e) => format!("Failed to create analysis: {}", e),
+        Ok(()) => HttpResponse::Ok().json(serde_json::json!({"message": "Analysis created"})),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to create analysis: {}", e)),
     }
 }
 
@@ -127,18 +127,19 @@ async fn get_all_analyses(
 
 async fn add_test(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
-    new_test: web::Json<Test>,
+    new_test: web::Json<TestInput>,
 ) -> impl Responder {
     let result = tests::add_test(&*db.lock().unwrap(), &new_test.into_inner());
     match result {
-        Ok(()) => format!("Test created"),
-        Err(e) => format!("Failed to create test: {}", e),
+        Ok(()) => HttpResponse::Ok().json(serde_json::json!({"message": "Test created"})),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to create test: {}", e)),
     }
 }
 
 async fn get_all_tests(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
 ) -> HttpResponse {
+    let tests = tests::get_all_tests(&*db.lock().unwrap());
     let tests = tests::get_all_tests(&*db.lock().unwrap());
     match tests {
         Ok(tests) => HttpResponse::Ok().json(tests),

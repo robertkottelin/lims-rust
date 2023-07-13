@@ -41,6 +41,13 @@ pub struct Test {
     pub result: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TestInput {
+    pub sample_name: String,
+    pub analysis_name: String,
+    pub instrument_name: String,
+    pub result: String,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Schedule {
