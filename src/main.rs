@@ -39,43 +39,48 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(conn.clone())
-            .route("/sample_id/{id}", web::get().to(get_sample_id))
-            .route("/add_sample", web::post().to(add_sample))
-            .route("/samples", web::get().to(get_all_samples))
-            .route("/add_instrument", web::post().to(add_instrument))
-            .route("/instruments", web::get().to(get_all_instruments))
-            .route("/add_analysis", web::post().to(add_analysis))
-            .route("/analyses", web::get().to(get_all_analyses))     
-            .route("/add_test", web::post().to(add_test))
-            .route("/tests", web::get().to(get_all_tests))
+            .service(
+                web::scope("/samples")
+                    .route("/{id}", web::get().to(get_sample_id))
+                    .route("", web::post().to(add_sample))
+                    .route("", web::get().to(get_all_samples)),
+            )
+            .service(
+                web::scope("/instruments")
+                    .route("", web::post().to(add_instrument))
+                    .route("", web::get().to(get_all_instruments)),
+            )
+            .service(
+                web::scope("/analyses")
+                    .route("", web::post().to(add_analysis))
+                    .route("", web::get().to(get_all_analyses)),
+            )
+            .service(
+                web::scope("/tests")
+                    .route("", web::post().to(add_test))
+                    .route("", web::get().to(get_all_tests)),
+            )
     })
     .bind("127.0.0.1:8080")?
     .run()
     .await
 }
 
+// Sample related endpoints
 async fn get_sample_id(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
     id: web::Path<i32>,
 ) -> impl Responder {
+    log::info!("Received request for sample id: {}", id);
     let samples = samples::get_sample_id(&*db.lock().unwrap(), Some(*id));
     format!("Sample: {:?}", samples)
-}
-
-async fn get_all_samples(
-    db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
-) -> HttpResponse {
-    let samples = samples::get_all_samples(&*db.lock().unwrap());
-    match samples {
-        Ok(samples) => HttpResponse::Ok().json(samples),
-        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get samples: {}", e)),
-    }
 }
 
 async fn add_sample(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
     new_sample: web::Json<Sample>,
 ) -> impl Responder {
+    log::info!("Received request to add new sample: {:?}", new_sample);
     let result = samples::add_sample(&*db.lock().unwrap(), &new_sample.into_inner());
     match result {
         Ok(()) => HttpResponse::Ok().json(serde_json::json!({"message": "Sample created"})),
@@ -83,10 +88,23 @@ async fn add_sample(
     }
 }
 
+async fn get_all_samples(
+    db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
+) -> HttpResponse {
+    log::info!("Received request for all samples");
+    let samples = samples::get_all_samples(&*db.lock().unwrap());
+    match samples {
+        Ok(samples) => HttpResponse::Ok().json(samples),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get samples: {}", e)),
+    }
+}
+
+// Instrument related endpoints
 async fn add_instrument(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
     new_instrument: web::Json<Instrument>,
 ) -> impl Responder {
+    log::info!("Received request to add new instrument: {:?}", new_instrument);
     let result = instruments::add_instrument(&*db.lock().unwrap(), &new_instrument.into_inner());
     match result {
         Ok(()) => HttpResponse::Ok().json(serde_json::json!({"message": "Instrument created"})),
@@ -97,6 +115,7 @@ async fn add_instrument(
 async fn get_all_instruments(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
 ) -> HttpResponse {
+    log::info!("Received request for all instruments");
     let instruments = instruments::get_all_instruments(&*db.lock().unwrap());
     match instruments {
         Ok(instruments) => HttpResponse::Ok().json(instruments),
@@ -104,10 +123,12 @@ async fn get_all_instruments(
     }
 }
 
+// Analysis related endpoints
 async fn add_analysis(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
     new_analysis: web::Json<Analysis>,
 ) -> impl Responder {
+    log::info!("Received request to add new analysis: {:?}", new_analysis);
     let result = analysis::add_analysis(&*db.lock().unwrap(), &new_analysis.into_inner());
     match result {
         Ok(()) => HttpResponse::Ok().json(serde_json::json!({"message": "Analysis created"})),
@@ -118,6 +139,7 @@ async fn add_analysis(
 async fn get_all_analyses(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
 ) -> HttpResponse {
+    log::info!("Received request for all analyses");
     let analyses = analysis::get_all_analyses(&*db.lock().unwrap());
     match analyses {
         Ok(analyses) => HttpResponse::Ok().json(analyses),
@@ -125,10 +147,12 @@ async fn get_all_analyses(
     }
 }
 
+// Test related endpoints
 async fn add_test(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
     new_test: web::Json<TestInput>,
 ) -> impl Responder {
+    log::info!("Received request to add new test: {:?}", new_test);
     let result = tests::add_test(&*db.lock().unwrap(), &new_test.into_inner());
     match result {
         Ok(()) => HttpResponse::Ok().json(serde_json::json!({"message": "Test created"})),
@@ -139,7 +163,7 @@ async fn add_test(
 async fn get_all_tests(
     db: web::Data<Arc<Mutex<rusqlite::Connection>>>,
 ) -> HttpResponse {
-    let tests = tests::get_all_tests(&*db.lock().unwrap());
+    log::info!("Received request for all tests");
     let tests = tests::get_all_tests(&*db.lock().unwrap());
     match tests {
         Ok(tests) => HttpResponse::Ok().json(tests),
