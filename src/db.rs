@@ -12,6 +12,7 @@ pub fn init_db() -> Result<Connection> {
         params![],
     )?;
     
+    
     conn.execute(
         "INSERT INTO samples (name, description) VALUES (?, ?)",
         params!["Example Sample", "This is an example sample"],
